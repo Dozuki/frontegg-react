@@ -15,13 +15,6 @@
     margin-bottom: var(--element-spacing);
     font-size: var(--element-font-size);
 
-    & * > {
-      background-color: inherit;
-      color: inherit;
-      font-size: var(--element-font-size);
-      font-weight: 600;
-    }
-
     #{$class}__label-button {
       margin-left: auto;
       border: none;
