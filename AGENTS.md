@@ -46,9 +46,13 @@ Everything routes through the `Makefile` (`make help` for the full list): `init`
 | --- | --- |
 | `make test-component` | **The real suite.** 8 Cypress specs; passes. |
 | `make test-unit` | Vacuous — zero test files, `--passWithNoTests`. |
-| `make test-integration` | One spec; needs `demo-saas` served on :3000. Unverified. |
+| `make test-integration` | Duplicate of `test-component` — same 8 specs, plus a demo-saas build nothing uses. |
 
 `make test-unit` is **not** a regression signal. Use `make test-component` — 4 specs in `packages/audits/src/tests`, 4 in `packages/auth/src/tests` (`*.cy-spec.tsx`). Cypress 5.3.0 arrives transitively via `cypress-react-unit-test`; no extra setup.
+
+**Nothing tests `core` or `connectivity`** — all 8 specs are audits and auth, so our actual integration surface has zero coverage. `packages/demo-saas` does mount `WebhookComponent` under a `FronteggProvider` + `ConnectivityPlugin()` (`OldApp.tsx`), the same wiring as the monolith, but no spec points at it. Note demo-saas targets an upstream tenant (`https://david.frontegg.com`) and also loads `AuthPlugin` and `@frontegg/admin-portal`.
+
+`make test-integration` does **not** run `cypress/integration/auth.spec.ts`. That file can never run: `cypress.json` sets `testFiles: "**/*.cy-spec.*"`, which it doesn't match, and it imports `./constants`, which exists only as a `.d.ts` with no runtime module. Treat it as dead code. The target's demo-saas build and `serve` on :3000 are unused scaffolding — the component specs mount components directly.
 
 One test is skipped: `login-flow.cy-spec.tsx` → *"Login with Social Login"*. The app never issues `GET /identity/resources/sso/v1`, so `cy.wait('@socialLogin')` times out. Not flaky, not a URL mismatch, not the saga wiring or `firstLoad` init — root cause unresolved, suspected 4.x-component / 5.64.4-state-layer mismatch. Skipped because we don't use auth.
 
