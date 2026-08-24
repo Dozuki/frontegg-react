@@ -13,6 +13,16 @@ import {
 // WebhookComponent inside a FronteggProvider carrying ConnectivityPlugin.
 const ROOT_PATH = '/webhook';
 
+// One compound selector, never `.first().find(...)`: the table re-renders on
+// interaction, and a captured row subject goes stale on Cypress's retry.
+const FIRST_ROW = '.fe-table__tbody .fe-table__tr:first-of-type';
+
+const openRemoveDialog = () => {
+  cy.get(`${FIRST_ROW} [data-test-id="menuBtn"]`).click();
+  cy.contains('Remove').click();
+  cy.get('[data-test-id="acceptBtn"]').should('be.visible');
+};
+
 const mountWebhooks = () => {
   cy.server();
   mockConnectivityApi();
@@ -51,24 +61,27 @@ describe('Connectivity Webhooks', () => {
     mountWebhooks();
     cy.route({ method: 'PATCH', url: `${WEBHOOKS_SERVICE}/webhook-1`, status: 200, response: {} }).as('patchWebhook');
 
-    cy.get('.fe-table__tbody .fe-table__tr').first().find('input[type="checkbox"]').click({ force: true });
+    cy.get(`${FIRST_ROW} input[type="checkbox"]`).click({ force: true });
 
     cy.wait('@patchWebhook').its('request.body').should('include', { _id: 'webhook-1', isActive: false });
   });
 
-  it('deleting a webhook asks first, then calls the API', () => {
+  it('cancelling a delete closes the dialog without calling the API', () => {
     mountWebhooks();
     cy.route({ method: 'DELETE', url: `${WEBHOOKS_SERVICE}/webhook-1`, status: 200, response: {} }).as('deleteWebhook');
 
-    cy.get('.fe-table__tbody .fe-table__tr').first().find('[data-test-id="menuBtn"]').click();
-    cy.contains('Remove').click();
-
-    cy.get('[data-test-id="acceptBtn"]').should('be.visible');
+    openRemoveDialog();
     cy.get('[data-test-id="cancelBtn"]').click();
-    cy.get('[data-test-id="acceptBtn"]').should('not.exist');
 
-    cy.get('.fe-table__tbody .fe-table__tr').first().find('[data-test-id="menuBtn"]').click();
-    cy.contains('Remove').click();
+    cy.get('[data-test-id="acceptBtn"]').should('not.exist');
+    cy.get('@deleteWebhook.all').should('have.length', 0);
+  });
+
+  it('confirming a delete calls the API', () => {
+    mountWebhooks();
+    cy.route({ method: 'DELETE', url: `${WEBHOOKS_SERVICE}/webhook-1`, status: 200, response: {} }).as('deleteWebhook');
+
+    openRemoveDialog();
     cy.get('[data-test-id="acceptBtn"]').click();
 
     cy.wait('@deleteWebhook');
