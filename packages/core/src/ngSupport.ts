@@ -1,5 +1,4 @@
-import { useState, createElement } from 'react';
-import { createPortal, render } from 'react-dom';
+import { useState } from 'react';
 import { createBrowserHistory } from 'history';
 
 export interface ProxyComponent {
@@ -13,12 +12,6 @@ export const useProxyComponent = <T extends ProxyComponent>(props: T) => {
   const [rcPortals, setRcPortals] = useState([]);
   props._resolvePortals?.(setRcPortals);
   return rcPortals;
-};
-
-export const DOMProxy = {
-  createElement,
-  createPortal,
-  render,
 };
 
 export { createBrowserHistory };
