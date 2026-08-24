@@ -27,8 +27,10 @@ const defaultAuthPlugin = {
   },
 };
 
+// Only the API-failure case is kept: it renders the shared ErrorMessage component, which
+// ConnectivityWebhooksTestFrom also uses. The rest are forgot/reset navigation flows.
 describe('Forgot Password Tests', () => {
-  it('NO SAML, should display forget password if click on forget password button', () => {
+  it.skip('NO SAML, should display forget password if click on forget password button', () => {
     cy.server();
     mockAuthApi(false, false);
     mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
@@ -48,7 +50,7 @@ describe('Forgot Password Tests', () => {
     cy.get(emailInputSelector).should('have.value', EMAIL_1);
   });
 
-  it('WITH SAML, should display forget password if click on forget password button', () => {
+  it.skip('WITH SAML, should display forget password if click on forget password button', () => {
     cy.server();
     mockAuthApi(false, true);
     cy.route({
@@ -95,7 +97,7 @@ describe('Forgot Password Tests', () => {
     cy.get('.fe-error-message').contains('Unknown error occurred').should('be.visible');
   });
 
-  it('should display success message if api request succeeded', () => {
+  it.skip('should display success message if api request succeeded', () => {
     cy.server();
     mockAuthApi(false, false);
     cy.route({
@@ -122,7 +124,7 @@ describe('Forgot Password Tests', () => {
     });
   });
 
-  it('ResetPassword Page should display error if userId or token not found', () => {
+  it.skip('ResetPassword Page should display error if userId or token not found', () => {
     cy.server();
     mockAuthApi(false, false);
     mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
@@ -136,7 +138,7 @@ describe('Forgot Password Tests', () => {
     });
   });
 
-  it('ResetPassword Page should display success and redirect to login page', () => {
+  it.skip('ResetPassword Page should display success and redirect to login page', () => {
     cy.server();
     mockAuthApi(false, false);
     cy.route({

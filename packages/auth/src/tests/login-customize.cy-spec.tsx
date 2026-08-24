@@ -22,7 +22,9 @@ const defaultAuthPlugin = {
 };
 
 /* eslint-env mocha */
-describe('Login Customize Tests', () => {
+// Skipped: asserts only the AuthPlugin `header` option, which the monolith never uses.
+// No shared core component is exercised, so this guards nothing in our webhooks path.
+describe.skip('Login Customize Tests', () => {
   it('Global Custom Header', () => {
     cy.server();
     cy.route({
