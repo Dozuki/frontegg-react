@@ -1,11 +1,10 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { AuditsPlugin, Audits } from '../index';
 import { mockAuditsApi, TestFronteggWrapper } from '../../../../cypress/helpers';
 
 describe('Audits page table sorting', () => {
   it('Sort by name Z-A', () => {
-    cy.server();
     mockAuditsApi();
     mount(
       <TestFronteggWrapper plugins={[AuditsPlugin()]}>

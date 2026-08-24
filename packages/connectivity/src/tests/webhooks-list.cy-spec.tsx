@@ -1,13 +1,7 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { ConnectivityPlugin, WebhookComponent } from '../index';
-import {
-  mockConnectivityApi,
-  mountOptions,
-  navigateTo,
-  TestFronteggWrapper,
-  WEBHOOKS_SERVICE,
-} from '../../../../cypress/helpers';
+import { mockConnectivityApi, navigateTo, TestFronteggWrapper, WEBHOOKS_SERVICE } from '../../../../cypress/helpers';
 
 // Mirrors the monolith's only Frontegg integration (manage_webhooks.tsx): a
 // WebhookComponent inside a FronteggProvider carrying ConnectivityPlugin.
@@ -24,13 +18,11 @@ const openRemoveDialog = () => {
 };
 
 const mountWebhooks = () => {
-  cy.server();
   mockConnectivityApi();
   mount(
     <TestFronteggWrapper plugins={[ConnectivityPlugin()]}>
       <WebhookComponent rootPath={ROOT_PATH} />
-    </TestFronteggWrapper>,
-    mountOptions
+    </TestFronteggWrapper>
   );
   navigateTo(ROOT_PATH);
   cy.wait(['@webhooks', '@categories', '@channelMap']);
@@ -59,7 +51,7 @@ describe('Connectivity Webhooks', () => {
 
   it('toggling status sends the flipped isActive', () => {
     mountWebhooks();
-    cy.route({ method: 'PATCH', url: `${WEBHOOKS_SERVICE}/webhook-1`, status: 200, response: {} }).as('patchWebhook');
+    cy.intercept('PATCH', `${WEBHOOKS_SERVICE}/webhook-1`, { statusCode: 200, body: {} }).as('patchWebhook');
 
     cy.get(`${FIRST_ROW} input[type="checkbox"]`).click({ force: true });
 
@@ -68,7 +60,7 @@ describe('Connectivity Webhooks', () => {
 
   it('cancelling a delete closes the dialog without calling the API', () => {
     mountWebhooks();
-    cy.route({ method: 'DELETE', url: `${WEBHOOKS_SERVICE}/webhook-1`, status: 200, response: {} }).as('deleteWebhook');
+    cy.intercept('DELETE', `${WEBHOOKS_SERVICE}/webhook-1`, { statusCode: 200, body: {} }).as('deleteWebhook');
 
     openRemoveDialog();
     cy.get('[data-test-id="cancelBtn"]').click();
@@ -79,7 +71,7 @@ describe('Connectivity Webhooks', () => {
 
   it('confirming a delete calls the API', () => {
     mountWebhooks();
-    cy.route({ method: 'DELETE', url: `${WEBHOOKS_SERVICE}/webhook-1`, status: 200, response: {} }).as('deleteWebhook');
+    cy.intercept('DELETE', `${WEBHOOKS_SERVICE}/webhook-1`, { statusCode: 200, body: {} }).as('deleteWebhook');
 
     openRemoveDialog();
     cy.get('[data-test-id="acceptBtn"]').click();

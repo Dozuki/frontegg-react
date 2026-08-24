@@ -1,11 +1,10 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { AuditsPlugin, Audits } from '../index';
 import { mockAuditsApi, TestFronteggWrapper } from '../../../../cypress/helpers';
 
 describe('Load audits page', () => {
   it('Audits page should be rendered', () => {
-    cy.server();
     mockAuditsApi();
     mount(
       <TestFronteggWrapper plugins={[AuditsPlugin()]}>
@@ -21,7 +20,6 @@ describe('Load audits page', () => {
   });
 
   it('Audits rows should be rendered', () => {
-    cy.server();
     mockAuditsApi();
     mount(
       <TestFronteggWrapper plugins={[AuditsPlugin()]}>

@@ -34,10 +34,6 @@ export const TestFronteggWrapper: FC<TestFronteggWrapperProps> = (props) => (
   </FronteggProvider>
 );
 
-export const mountOptions = {
-  stylesheets: 'https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css',
-};
-
 declare global {
   interface Window {
     cypressHistory: any;
@@ -51,12 +47,9 @@ export const navigateTo = (path: string) => {
 };
 
 export const mockAuthMe = () => {
-  cy.route({
-    method: 'GET',
-    url: `${IDENTITY_SERVICE}/resources/users/v2/me`,
-    status: 200,
-    delay: 200,
-    response: {
+  cy.intercept('GET', `${IDENTITY_SERVICE}/resources/users/v2/me`, {
+    statusCode: 200,
+    body: {
       activatedForTenant: true,
       email: EMAIL_1,
       id: USER_ID_1,
@@ -72,13 +65,12 @@ export const mockAuthMe = () => {
       tenantIds: ['my-tenant-id'],
       verified: true,
     },
-  }).as('me');
-  cy.route({
-    method: 'GET',
-    url: `${IDENTITY_SERVICE}/resources/users/v2/me/tenants`,
-    status: 200,
     delay: 200,
-    response: [],
+  }).as('me');
+  cy.intercept('GET', `${IDENTITY_SERVICE}/resources/users/v2/me/tenants`, {
+    statusCode: 200,
+    body: [],
+    delay: 200,
   }).as('meTenants');
 };
 
@@ -97,53 +89,42 @@ export const mockAuthApi = (
   }
 ) => {
   if (authenticated) {
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`,
-      status: 200,
-      response: {
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`, {
+      statusCode: 200,
+      body: {
         accessToken: '',
         refreshToken: '',
         verified: true,
       },
     }).as('refreshToken');
   } else {
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`,
-      status: 401,
-      response: 'Unauthorized',
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`, {
+      statusCode: 401,
+      body: 'Unauthorized',
     }).as('refreshToken');
   }
   if (saml) {
-    cy.route({
-      method: 'GET',
-      url: `${TEAM_SERVICE}/resources/sso/v2/configurations/public`,
-      status: 200,
-      delay: 200,
-      response: {
+    cy.intercept('GET', `${TEAM_SERVICE}/resources/sso/v2/configurations/public`, {
+      statusCode: 200,
+      body: {
         isActive: true,
       },
+      delay: 200,
     }).as('metadata');
   } else {
-    cy.route({
-      method: 'GET',
-      url: `${TEAM_SERVICE}/resources/sso/v2/configurations/public`,
-      status: 200,
-      delay: 200,
-      response: {
+    cy.intercept('GET', `${TEAM_SERVICE}/resources/sso/v2/configurations/public`, {
+      statusCode: 200,
+      body: {
         isActive: false,
       },
+      delay: 200,
     }).as('metadata');
   }
 
   if (socialLogin) {
-    cy.route({
-      method: 'GET',
-      url: `${IDENTITY_SERVICE}/resources/sso/v1`,
-      status: 200,
-      delay: 200,
-      response: [
+    cy.intercept('GET', `${IDENTITY_SERVICE}/resources/sso/v1`, {
+      statusCode: 200,
+      body: [
         {
           active: true,
           clientId: 'google_client_id',
@@ -151,67 +132,52 @@ export const mockAuthApi = (
           type: 'google',
         },
       ],
+      delay: 200,
     }).as('socialLogin');
   } else {
-    cy.route({
-      method: 'GET',
-      url: `${IDENTITY_SERVICE}/resources/sso/v1`,
-      status: 200,
-      delay: 200,
-      response: [],
-    }).as('socialLogin');
+    cy.intercept('GET', `${IDENTITY_SERVICE}/resources/sso/v1`, { statusCode: 200, body: [], delay: 200 }).as(
+      'socialLogin'
+    );
   }
-  cy.route({
-    method: 'GET',
-    url: `${IDENTITY_SERVICE}/resources/configurations/v1/public`,
-    status: 200,
+  cy.intercept('GET', `${IDENTITY_SERVICE}/resources/configurations/v1/public`, {
+    statusCode: 200,
+    body: publicConfigurations,
     delay: 200,
-    response: publicConfigurations,
   }).as('publicConfigurations');
-  cy.route({
-    method: 'GET',
-    url: `${IDENTITY_SERVICE}/resources/configurations/v1/auth/strategies/public`,
-    status: 200,
+  cy.intercept('GET', `${IDENTITY_SERVICE}/resources/configurations/v1/auth/strategies/public`, {
+    statusCode: 200,
+    body: publicAuthStrategyConfigurations,
     delay: 200,
-    response: publicAuthStrategyConfigurations,
   }).as('publicAuthStrategyConfigurations');
 };
 
 export const mockAuditsApi = () => {
-  cy.route({
-    method: 'GET',
-    url: `${AUDITS_SERVICE}?sortDirection=desc&sortBy=createdAt&filter=&offset=0&count=20`,
-    status: 200,
-    delay: 200,
-    response: {
+  cy.intercept('GET', `${AUDITS_SERVICE}?sortDirection=desc&sortBy=createdAt&filter=&offset=0&count=20`, {
+    statusCode: 200,
+    body: {
       data: auditsData,
       total: auditsData.length,
     },
-  }).as('auditsData');
-  cy.route({
-    method: 'GET',
-    url: `${AUDITS_SERVICE}?sortDirection=desc&sortBy=user&filter=&offset=0&count=20`,
-    status: 200,
     delay: 200,
-    response: {
+  }).as('auditsData');
+  cy.intercept('GET', `${AUDITS_SERVICE}?sortDirection=desc&sortBy=user&filter=&offset=0&count=20`, {
+    statusCode: 200,
+    body: {
       data: auditsDataDescName,
       total: auditsDataDescName.length,
     },
+    delay: 200,
   }).as('auditsDataNameDesc');
-  cy.route({
-    method: 'GET',
-    url: `${METADATA_SERVICE}?entityName=audits`,
-    status: 200,
-    response: {
+  cy.intercept('GET', `${METADATA_SERVICE}?entityName=audits`, {
+    statusCode: 200,
+    body: {
       rows: auditsMetadata,
     },
   }).as('auditsMetadata');
-  cy.route({
-    method: 'GET',
-    url: `${AUDITS_SERVICE}/stats?sortBy=createdAt&sortDirection=desc&count=20`,
-    status: 200,
+  cy.intercept('GET', `${AUDITS_SERVICE}/stats?sortBy=createdAt&sortDirection=desc&count=20`, {
+    statusCode: 200,
+    body: auditsStats,
     delay: 200,
-    response: auditsStats,
   }).as('auditsStats');
 };
 
@@ -233,23 +199,8 @@ export const submitButtonSelector = 'button[type="submit"]';
 export const emailInputSelector = 'input[name="email"]';
 
 export const mockConnectivityApi = (webhooks: any[] = webhookConfigurations) => {
-  cy.route({
-    method: 'GET',
-    url: WEBHOOKS_SERVICE,
-    status: 200,
-    response: webhooks,
-  }).as('webhooks');
-  cy.route({
-    method: 'GET',
-    url: `${EVENTS_SERVICE}/categories`,
-    status: 200,
-    response: webhookCategories,
-  }).as('categories');
+  cy.intercept('GET', WEBHOOKS_SERVICE, { statusCode: 200, body: webhooks }).as('webhooks');
+  cy.intercept('GET', `${EVENTS_SERVICE}/categories`, { statusCode: 200, body: webhookCategories }).as('categories');
   // getChannelMaps appends a ?channels= query, so match on the prefix.
-  cy.route({
-    method: 'GET',
-    url: `${EVENTS_SERVICE}?channels=*`,
-    status: 200,
-    response: webhookChannelMap,
-  }).as('channelMap');
+  cy.intercept('GET', `${EVENTS_SERVICE}?channels=*`, { statusCode: 200, body: webhookChannelMap }).as('channelMap');
 };

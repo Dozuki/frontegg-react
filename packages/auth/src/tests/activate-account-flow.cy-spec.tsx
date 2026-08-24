@@ -1,10 +1,9 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { AuthPlugin } from '../index';
 import {
   IDENTITY_SERVICE,
   mockAuthApi,
-  mountOptions,
   navigateTo,
   PASSWORD,
   submitButtonSelector,
@@ -28,9 +27,8 @@ const defaultAuthPlugin = {
 // in login-flow, and the monolith never mounts these pages.
 describe.skip('Activate Account Tests', () => {
   it('ActivateAccount Page should display error if userId or token not found', () => {
-    cy.server();
     mockAuthApi(false, false);
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
     navigateTo(defaultAuthPlugin.routes.activateUrl);
 
     cy.get('.fe-error-message').contains('Activation failed').should('be.visible');
@@ -42,17 +40,14 @@ describe.skip('Activate Account Tests', () => {
   });
 
   it('ActivateAccount Page should display success and redirect to login page', () => {
-    cy.server();
     mockAuthApi(false, false);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/users/v1/activate`,
-      status: 200,
-      response: {},
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/users/v1/activate`, {
+      statusCode: 200,
+      body: {},
       delay: 200,
     }).as('activateAccount');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     const userId = '1111-userId-1111';
     const token = '1111-token-1111';
@@ -92,17 +87,14 @@ describe.skip('Activate Account Tests', () => {
   });
 
   it('ActivateAccount Page should display success and redirect to after auth redirect url', () => {
-    cy.server();
     mockAuthApi(false, false);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/users/v1/activate`,
-      status: 200,
-      response: {},
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/users/v1/activate`, {
+      statusCode: 200,
+      body: {},
       delay: 200,
     }).as('activateAccount');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     const userId = '1111-userId-1111';
     const token = '1111-token-1111';

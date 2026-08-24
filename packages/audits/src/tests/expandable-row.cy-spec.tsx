@@ -1,12 +1,11 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { AuditsPlugin, Audits } from '../index';
 import { mockAuditsApi, TestFronteggWrapper } from '../../../../cypress/helpers';
 
 // Skipped: exercises Table's expandable-row feature, which the webhooks table does not use.
 describe.skip('Expandable Rows', () => {
   it('Rows should expand', () => {
-    cy.server();
     mockAuditsApi();
     mount(
       <TestFronteggWrapper plugins={[AuditsPlugin()]}>

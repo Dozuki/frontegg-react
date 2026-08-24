@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { AuthPlugin } from '../index';
 import {
   checkEmailValidation,
@@ -8,7 +8,6 @@ import {
   IDENTITY_SERVICE,
   METADATA_SERVICE,
   mockAuthApi,
-  mountOptions,
   navigateTo,
   PASSWORD,
   submitButtonSelector,
@@ -31,13 +30,12 @@ const defaultAuthPlugin = {
 // ConnectivityWebhooksTestFrom also uses. The rest are forgot/reset navigation flows.
 describe('Forgot Password Tests', () => {
   it.skip('NO SAML, should display forget password if click on forget password button', () => {
-    cy.server();
     mockAuthApi(false, false);
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
     navigateTo(defaultAuthPlugin.routes.loginUrl);
 
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     cy.get(emailInputSelector).focus().clear().type(EMAIL_1).blur();
     cy.get('[data-test-id="forgotPassBtn"]').click();
@@ -51,21 +49,18 @@ describe('Forgot Password Tests', () => {
   });
 
   it.skip('WITH SAML, should display forget password if click on forget password button', () => {
-    cy.server();
     mockAuthApi(false, true);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`,
-      status: 400,
-      response: { address: null },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`, {
+      statusCode: 400,
+      body: { address: null },
       delay: 200,
     }).as('preLogin');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
     navigateTo(defaultAuthPlugin.routes.loginUrl);
 
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     cy.get(emailSelector).focus().clear().type(EMAIL_1).blur();
@@ -84,10 +79,15 @@ describe('Forgot Password Tests', () => {
   });
 
   it('should display error message if api request failed', () => {
-    cy.server();
     mockAuthApi(false, false);
+    // Stub the failure rather than leaning on the request reaching nothing: the
+    // transport's own error message is what surfaces otherwise, and it varies.
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/users/v1/passwords/reset`, {
+      statusCode: 500,
+      body: { errors: ['Unknown error occurred'] },
+    }).as('forgotPasswordFailure');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
     navigateTo(defaultAuthPlugin.routes.forgetPasswordUrl);
 
     cy.get(submitButtonSelector).should('be.disabled');
@@ -98,17 +98,14 @@ describe('Forgot Password Tests', () => {
   });
 
   it.skip('should display success message if api request succeeded', () => {
-    cy.server();
     mockAuthApi(false, false);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/users/v1/passwords/reset`,
-      status: 200,
-      response: {},
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/users/v1/passwords/reset`, {
+      statusCode: 200,
+      body: {},
       delay: 200,
     }).as('forgotPassword');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
     navigateTo(defaultAuthPlugin.routes.forgetPasswordUrl);
 
     cy.get(submitButtonSelector).should('be.disabled');
@@ -125,9 +122,8 @@ describe('Forgot Password Tests', () => {
   });
 
   it.skip('ResetPassword Page should display error if userId or token not found', () => {
-    cy.server();
     mockAuthApi(false, false);
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
     navigateTo(defaultAuthPlugin.routes.resetPasswordUrl);
 
     cy.get('.fe-error-message').contains('Reset Password Failed').should('be.visible');
@@ -139,17 +135,14 @@ describe('Forgot Password Tests', () => {
   });
 
   it.skip('ResetPassword Page should display success and redirect to login page', () => {
-    cy.server();
     mockAuthApi(false, false);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/users/v1/passwords/reset/verify`,
-      status: 200,
-      response: {},
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/users/v1/passwords/reset/verify`, {
+      statusCode: 200,
+      body: {},
       delay: 200,
     }).as('resetPassword');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     const userId = '1111-userId-1111';
     const token = '1111-token-1111';

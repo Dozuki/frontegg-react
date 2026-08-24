@@ -1,13 +1,7 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { AuthPlugin } from '../index';
-import {
-  IDENTITY_SERVICE,
-  METADATA_SERVICE,
-  mountOptions,
-  navigateTo,
-  TestFronteggWrapper,
-} from '../../../../cypress/helpers';
+import { IDENTITY_SERVICE, METADATA_SERVICE, navigateTo, TestFronteggWrapper } from '../../../../cypress/helpers';
 
 const defaultAuthPlugin = {
   routes: {
@@ -26,14 +20,11 @@ const defaultAuthPlugin = {
 // No shared core component is exercised, so this guards nothing in our webhooks path.
 describe.skip('Login Customize Tests', () => {
   it('Global Custom Header', () => {
-    cy.server();
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`,
-      status: 401,
-      response: 'Unauthorized',
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`, {
+      statusCode: 401,
+      body: 'Unauthorized',
     });
-    cy.route({ method: 'GET', url: `${METADATA_SERVICE}?entityName=saml`, status: 200, response: { rows: [] } });
+    cy.intercept('GET', `${METADATA_SERVICE}?entityName=saml`, { statusCode: 200, body: { rows: [] } });
 
     mount(
       <TestFronteggWrapper
@@ -45,8 +36,7 @@ describe.skip('Login Customize Tests', () => {
         ]}
       >
         Home
-      </TestFronteggWrapper>,
-      mountOptions
+      </TestFronteggWrapper>
     );
 
     navigateTo('/account/login');

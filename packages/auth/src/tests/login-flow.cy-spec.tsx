@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'cypress-react-unit-test';
+import { mount } from 'cypress/react';
 import { AuthPlugin, LoginStep } from '../index';
 import { FRONTEGG_AFTER_AUTH_REDIRECT_URL, refreshTokenResponse } from '../constants';
 import {
@@ -8,7 +8,6 @@ import {
   IDENTITY_SERVICE,
   METADATA_SERVICE,
   mockAuthApi,
-  mountOptions,
   navigateTo,
   TestFronteggWrapper,
   ACCESS_TOKEN,
@@ -61,14 +60,14 @@ const checkPasswordValidation = () => {
 // mechanics with no shared-component coverage of their own.
 describe('Login Tests', () => {
   it('Login, NO SAML', () => {
-    cy.server();
     mockAuthApi(false, false);
     mockAuthMe();
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
+    cy.get('.loader').should('exist');
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const submitSelector = 'button[type=submit]';
 
@@ -79,11 +78,9 @@ describe('Login Tests', () => {
     checkPasswordValidation();
     cy.get(submitSelector).contains('Login').should('not.be.disabled');
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user`,
-      status: 401,
-      response: { errors: ['invalid auth'] },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user`, {
+      statusCode: 401,
+      body: { errors: ['invalid auth'] },
       delay: 200,
     }).as('login');
 
@@ -94,11 +91,9 @@ describe('Login Tests', () => {
       .should('deep.equal', { email: EMAIL_1, password: PASSWORD, recaptchaToken: '' });
     cy.contains('invalid auth').should('be.visible');
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user`,
-      status: 200,
-      response: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user`, {
+      statusCode: 200,
+      body: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
       delay: 200,
     }).as('login');
 
@@ -117,22 +112,19 @@ describe('Login Tests', () => {
   });
 
   it.skip('Login, check after login url', () => {
-    cy.server();
     mockAuthApi(false, false);
     mockAuthMe();
     cy.window().then((win) => win.localStorage.setItem(FRONTEGG_AFTER_AUTH_REDIRECT_URL, '/after-login-redirect'));
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user`,
-      status: 200,
-      response: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user`, {
+      statusCode: 200,
+      body: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
       delay: 200,
     }).as('login');
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     const passwordSelector = '[name="password"]';
@@ -155,38 +147,28 @@ describe('Login Tests', () => {
   });
 
   it.skip('Login, WITH SAML tenant, NO SAML email', () => {
-    cy.server();
     mockAuthApi(false, true);
     mockAuthMe();
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`,
-      status: 400,
-      response: { address: null },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`, {
+      statusCode: 400,
+      body: { address: null },
       delay: 200,
     }).as('preLogin');
-    cy.route({
-      method: 'GET',
-      url: `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
-      status: 200,
-      response: { isAllowedToRemember: false, mfaDeviceExpiration: 0 },
-      delay: 200,
-    }).as('checkIfAllowToRememberDevice');
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user`,
-      status: 200,
-      response: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
+    cy.intercept(
+      'GET',
+      `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
+      { statusCode: 200, body: { isAllowedToRemember: false, mfaDeviceExpiration: 0 }, delay: 200 }
+    ).as('checkIfAllowToRememberDevice');
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user`, {
+      statusCode: 200,
+      body: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
       delay: 200,
     }).as('login');
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, {
-      ...mountOptions,
-      alias: 'providerComponent',
-    });
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     const passwordSelector = '[name="password"]';
@@ -230,24 +212,18 @@ describe('Login Tests', () => {
   });
 
   it.skip('Login, WITH SAML tenant, WITH email', () => {
-    cy.server();
     mockAuthApi(false, true);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`,
-      status: 200,
-      response: { address: SSO_PATH },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`, {
+      statusCode: 200,
+      body: { address: SSO_PATH },
       delay: 200,
     }).as('preLogin');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, {
-      ...mountOptions,
-      alias: 'providerComponent',
-    });
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     const passwordSelector = '[name="password"]';
@@ -271,30 +247,23 @@ describe('Login Tests', () => {
   });
 
   it.skip('Login, WITH SAML tenant, WITH email, with two-factor', () => {
-    cy.server();
     mockAuthApi(false, true);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`,
-      status: 200,
-      response: { address: SSO_PATH },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`, {
+      statusCode: 200,
+      body: { address: SSO_PATH },
       delay: 200,
     }).as('preLogin');
-    cy.route({
-      method: 'GET',
-      url: `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
-      status: 200,
-      response: { isAllowedToRemember: false, mfaDeviceExpiration: 0 },
-    }).as('checkIfAllowToRememberDevice');
+    cy.intercept(
+      'GET',
+      `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
+      { statusCode: 200, body: { isAllowedToRemember: false, mfaDeviceExpiration: 0 } }
+    ).as('checkIfAllowToRememberDevice');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, {
-      ...mountOptions,
-      alias: 'providerComponent',
-    });
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const passwordSelector = '[name="password"]';
     const submitSelector = 'button[type=submit]';
@@ -316,11 +285,9 @@ describe('Login Tests', () => {
       expect(loc.pathname).to.eq(SSO_PATH);
     });
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`,
-      status: 200,
-      response: {
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`, {
+      statusCode: 200,
+      body: {
         mfaRequired: true,
         mfaToken: MFA_TOKEN,
       },
@@ -328,10 +295,7 @@ describe('Login Tests', () => {
     cy.wait(1000);
     navigateTo(defaultAuthPlugin.routes.authenticatedUrl);
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, {
-      ...mountOptions,
-      alias: 'providerComponent',
-    });
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     cy.wait(['@refreshTokenForMfa', '@checkIfAllowToRememberDevice']);
 
@@ -345,11 +309,9 @@ describe('Login Tests', () => {
     cy.get(codeSelector).parents('.field').should('not.have.class', 'error');
     cy.get(submitSelector).contains('Login').should('not.be.disabled');
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`,
-      status: 400,
-      response: { errors: ['invalid code'] },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`, {
+      statusCode: 400,
+      body: { errors: ['invalid code'] },
       delay: 200,
     }).as('verifyMfa');
 
@@ -359,18 +321,14 @@ describe('Login Tests', () => {
       .should('deep.equal', { mfaToken: MFA_TOKEN, value: validCode, rememberDevice: false });
     cy.contains('invalid code').should('be.visible');
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`,
-      status: 200,
-      response: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`, {
+      statusCode: 200,
+      body: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
       delay: 200,
     }).as('verifyMfa');
-    cy.route({
-      method: 'GET',
-      url: `${IDENTITY_SERVICE}/resources/users/v2/me`,
-      status: 200,
-      response: { name: 'name', email: 'email' },
+    cy.intercept('GET', `${IDENTITY_SERVICE}/resources/users/v2/me`, {
+      statusCode: 200,
+      body: { name: 'name', email: 'email' },
       delay: 200,
     }).as('me');
     cy.get(submitSelector).contains('Login').click();
@@ -385,29 +343,24 @@ describe('Login Tests', () => {
   });
 
   it.skip('Login, NO SAML, Two-Factor', () => {
-    cy.server();
     mockAuthApi(false, false);
     mockAuthMe();
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user`,
-      status: 200,
-      response: { mfaToken: MFA_TOKEN, mfaRequired: true },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user`, {
+      statusCode: 200,
+      body: { mfaToken: MFA_TOKEN, mfaRequired: true },
       delay: 200,
     }).as('login');
-    cy.route({
-      method: 'GET',
-      url: `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
-      status: 200,
-      response: { isAllowedToRemember: true, mfaDeviceExpiration: 60 * 60 * 24 * 3 },
-      delay: 200,
-    }).as('checkIfAllowToRememberDevice');
+    cy.intercept(
+      'GET',
+      `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
+      { statusCode: 200, body: { isAllowedToRemember: true, mfaDeviceExpiration: 60 * 60 * 24 * 3 }, delay: 200 }
+    ).as('checkIfAllowToRememberDevice');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const submitSelector = 'button[type=submit]';
     const codeSelector = '[name="code"]';
@@ -437,11 +390,9 @@ describe('Login Tests', () => {
     cy.get(codeSelector).parents('.field').should('not.have.class', 'error');
     cy.get(submitSelector).contains('Login').should('not.be.disabled');
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`,
-      status: 400,
-      response: { errors: ['invalid code'] },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`, {
+      statusCode: 400,
+      body: { errors: ['invalid code'] },
       delay: 200,
     }).as('verifyMfa');
     cy.get(submitSelector).contains('Login').click();
@@ -451,11 +402,9 @@ describe('Login Tests', () => {
     cy.contains('invalid code').should('be.visible');
     cy.contains(`Don't ask again on this device for 3 days`).should('be.visible');
     cy.get(rememberDeviceSelector).should('be.visible');
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`,
-      status: 200,
-      response: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`, {
+      statusCode: 200,
+      body: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
       delay: 200,
     }).as('verifyMfa');
     cy.get(submitSelector).contains('Login').click();
@@ -469,28 +418,23 @@ describe('Login Tests', () => {
   });
 
   it.skip('Login, NO SAML, Recover Two-Factor', () => {
-    cy.server();
     mockAuthApi(false, false);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user`,
-      status: 200,
-      response: { mfaToken: MFA_TOKEN, mfaRequired: true },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user`, {
+      statusCode: 200,
+      body: { mfaToken: MFA_TOKEN, mfaRequired: true },
       delay: 200,
     }).as('login');
-    cy.route({
-      method: 'GET',
-      url: `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
-      status: 200,
-      response: { isAllowedToRemember: false, mfaDeviceExpiration: 0 },
-      delay: 200,
-    }).as('checkIfAllowToRememberDevice');
+    cy.intercept(
+      'GET',
+      `${IDENTITY_SERVICE}/resources/configurations/v1/mfa-policy/allow-remember-device?mfaToken=${MFA_TOKEN}`,
+      { statusCode: 200, body: { isAllowedToRemember: false, mfaDeviceExpiration: 0 }, delay: 200 }
+    ).as('checkIfAllowToRememberDevice');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, mountOptions);
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     const submitSelector = 'button[type=submit]';
     const codeSelector = '[name="code"]';
@@ -513,11 +457,9 @@ describe('Login Tests', () => {
 
     cy.get(codeSelector).focus().clear().type(RECOVERY_CODE).blur();
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/recover`,
-      status: 400,
-      response: { errors: ['invalid recovery code'] },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/recover`, {
+      statusCode: 400,
+      body: { errors: ['invalid recovery code'] },
       delay: 200,
     }).as('recoverMfa');
 
@@ -525,11 +467,9 @@ describe('Login Tests', () => {
     cy.wait('@recoverMfa').its('request.body').should('deep.equal', { recoveryCode: RECOVERY_CODE, email: EMAIL_1 });
     cy.contains('invalid recovery code').should('be.visible');
 
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/recover`,
-      status: 200,
-      response: {},
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/recover`, {
+      statusCode: 200,
+      body: {},
       delay: 200,
     }).as('recoverMfa');
     cy.get(submitSelector).contains('Disable MFA').click();
@@ -543,20 +483,14 @@ describe('Login Tests', () => {
   // Skipped: the app never issues GET /identity/resources/sso/v1, so `cy.wait('@socialLogin')`
   // times out. Unresolved 4.x-component / 5.64.4-state-layer mismatch; we don't ship auth.
   it.skip('Login with Social Login', () => {
-    cy.server();
     mockAuthApi(false, false, true);
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`,
-      status: 200,
-      response: { address: SSO_PATH },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`, {
+      statusCode: 200,
+      body: { address: SSO_PATH },
       delay: 200,
     }).as('preLogin');
 
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, {
-      ...mountOptions,
-      alias: 'providerComponent',
-    });
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait([
@@ -566,7 +500,7 @@ describe('Login Tests', () => {
       '@publicConfigurations',
       '@publicAuthStrategyConfigurations',
     ]);
-    cy.get('.loader').should('not.be.visible');
+    cy.get('.loader').should('not.exist');
 
     cy.location('origin').then((origin) => {
       const loginWithGoogleSelector = '[data-test-id="googleSocialLogin-btn"]';
@@ -577,24 +511,20 @@ describe('Login Tests', () => {
 
       const redirectUri = origin + defaultAuthPlugin.routes.socialLoginCallbackUrl;
 
-      cy.route({
-        method: 'POST',
-        url: `${IDENTITY_SERVICE}/resources/auth/v1/user/sso/google/postlogin?code=google_auth_code&redirectUri=${redirectUri}`,
-        status: 200,
-        delay: 200,
-        response: {},
-      }).as('submitSocialLogin');
-      cy.route({
-        method: 'POST',
-        url: `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`,
-        status: 200,
-        response: refreshTokenResponse,
+      cy.intercept(
+        'POST',
+        `${IDENTITY_SERVICE}/resources/auth/v1/user/sso/google/postlogin?code=google_auth_code&redirectUri=${redirectUri}`,
+        { statusCode: 200, body: {}, delay: 200 }
+      ).as('submitSocialLogin');
+      cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`, {
+        statusCode: 200,
+        body: refreshTokenResponse,
       }).as('refreshToken');
 
       mockAuthMe();
       navigateTo(defaultAuthPlugin.routes.socialLoginCallbackUrl + GOOGLE_AUTH_RESPONSE);
 
-      cy.get('.loader').should('not.be.visible');
+      cy.get('.loader').should('not.exist');
       cy.wait(['@submitSocialLogin', '@refreshToken', '@meTenants', '@me']);
 
       cy.wait(1000);
@@ -606,15 +536,8 @@ describe('Login Tests', () => {
   });
 
   // it('Login with Social, with two-factor', () => {
-  //   cy.server();
-  //   mockAuthApi(false, false, true);
-  //   cy.route({
-  //     method: 'POST',
-  //     url: `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`,
-  //     status: 200,
-  //     response: { address: SSO_PATH },
-  //     delay: 200,
-  //   }).as('preLogin');
+  //   //   mockAuthApi(false, false, true);
+  //   cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v2/user/sso/prelogin`, { statusCode: 200, body: { address: SSO_PATH }, delay: 200 }).as('preLogin');
   //
   //   mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, {
   //     ...mountOptions,
@@ -623,7 +546,7 @@ describe('Login Tests', () => {
   //
   //   navigateTo(defaultAuthPlugin.routes.loginUrl);
   //   cy.wait(['@refreshToken', '@metadata', '@socialLogin', '@publicConfigurations']);
-  //   cy.get('.loader').should('not.be.visible');
+  //   cy.get('.loader').should('not.exist');
   //
   //   cy.location('origin').then((origin) => {
   //     const loginWithGoogleSelector = '[data-test-id="googleSocialLogin-btn"]';
@@ -634,25 +557,14 @@ describe('Login Tests', () => {
   //
   //     navigateTo(defaultAuthPlugin.routes.socialLoginCallbackUrl + GOOGLE_AUTH_RESPONSE);
   //
-  //     cy.get('.loader').should('not.be.visible');
+  //     cy.get('.loader').should('not.exist');
   //
   //     const redirectUri = origin + defaultAuthPlugin.routes.socialLoginCallbackUrl;
-  //     cy.route({
-  //       method: 'POST',
-  //       url: `${IDENTITY_SERVICE}/resources/auth/v1/user/sso/google/postlogin?code=google_auth_code?redirectUri=${redirectUri}`,
-  //       status: 200,
-  //       delay: 200,
-  //       response: {},
-  //     }).as('submitSocialLogin');
-  //     cy.route({
-  //       method: 'POST',
-  //       url: `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`,
-  //       status: 200,
-  //       response: {
+  //     cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/sso/google/postlogin?code=google_auth_code?redirectUri=${redirectUri}`, { statusCode: 200, body: {}, delay: 200 }).as('submitSocialLogin');
+  //     cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`, { statusCode: 200, body: {
   //         mfaRequired: true,
   //         mfaToken: MFA_TOKEN,
-  //       },
-  //     }).as('refreshToken');
+  //       } }).as('refreshToken');
   //
   //     cy.wait(['@submitSocialLogin', '@refreshToken']);
   //   });
@@ -670,25 +582,13 @@ describe('Login Tests', () => {
   //   cy.get(codeSelector).parents('.field').should('not.have.class', 'error');
   //   cy.get(submitSelector).contains('Login').should('not.be.disabled');
   //
-  //   cy.route({
-  //     method: 'POST',
-  //     url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`,
-  //     status: 400,
-  //     response: { errors: ['invalid code'] },
-  //     delay: 200,
-  //   }).as('verifyMfa');
+  //   cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`, { statusCode: 400, body: { errors: ['invalid code'] }, delay: 200 }).as('verifyMfa');
   //   cy.get(submitSelector).contains('Login').click();
   //   cy.wait('@verifyMfa').its('request.body').should('deep.equal', { mfaToken: MFA_TOKEN, value: validCode });
   //   cy.contains('invalid code').should('be.visible');
   //
   //   mockAuthMe();
-  //   cy.route({
-  //     method: 'POST',
-  //     url: `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`,
-  //     status: 200,
-  //     response: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' },
-  //     delay: 200,
-  //   }).as('verifyMfa');
+  //   cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/mfa/verify`, { statusCode: 200, body: { accessToken: ACCESS_TOKEN, refreshToken: 'refreshToken' }, delay: 200 }).as('verifyMfa');
   //   cy.get(submitSelector).contains('Login').click();
   //   cy.wait('@verifyMfa').its('request.body').should('deep.equal', { mfaToken: MFA_TOKEN, value: validCode });
   //
@@ -698,21 +598,15 @@ describe('Login Tests', () => {
   // });
 
   it.skip('Logout Component', () => {
-    cy.server();
-    cy.route({
-      method: 'POST',
-      url: `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`,
-      status: 200,
-      response: { accessToken: ACCESS_TOKEN },
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/token/refresh`, {
+      statusCode: 200,
+      body: { accessToken: ACCESS_TOKEN },
     });
-    cy.route({ method: 'GET', url: `${METADATA_SERVICE}?entityName=saml`, status: 200, response: { rows: [] } });
-    cy.route({ method: 'POST', url: `${IDENTITY_SERVICE}/resources/auth/v1/logout`, status: 200, response: 'LOGOUT' });
+    cy.intercept('GET', `${METADATA_SERVICE}?entityName=saml`, { statusCode: 200, body: { rows: [] } });
+    cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/logout`, { statusCode: 200, body: 'LOGOUT' });
 
     navigateTo(defaultAuthPlugin.routes.logoutUrl);
-    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>, {
-      ...mountOptions,
-      alias: 'providerComponent',
-    });
+    mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     cy.location().should((loc) => {
       expect(loc.pathname).to.eq(defaultAuthPlugin.routes.loginUrl);
