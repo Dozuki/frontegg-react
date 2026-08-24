@@ -303,3 +303,65 @@ export const auditsDataDescName = [
     frontegg_id: '9639a4bd-7004-460c-90be-77efbf73a719',
   },
 ];
+
+export const webhookCategories = [
+  {
+    id: 'cat-user',
+    createdAt: '2021-01-01T00:00:00.000Z',
+    updatedAt: '2021-01-01T00:00:00.000Z',
+    vendorId: 'vendor-1',
+    name: 'User',
+    events: [
+      {
+        id: 'evt-created',
+        createdAt: '2021-01-01T00:00:00.000Z',
+        updatedAt: '2021-01-01T00:00:00.000Z',
+        vendorId: 'vendor-1',
+        key: 'frontegg.user.created',
+        displayName: 'User Created',
+        category: 'User',
+      },
+      {
+        id: 'evt-deleted',
+        createdAt: '2021-01-01T00:00:00.000Z',
+        updatedAt: '2021-01-01T00:00:00.000Z',
+        vendorId: 'vendor-1',
+        key: 'frontegg.user.deleted',
+        displayName: 'User Deleted',
+        category: 'User',
+      },
+    ],
+  },
+];
+
+export const webhookChannelMap = [
+  { id: 'chm-1', key: 'frontegg.user.created', channels: ['webhook'] },
+  { id: 'chm-2', key: 'frontegg.user.deleted', channels: ['webhook'] },
+];
+
+export const webhookConfigurations = [
+  {
+    _id: 'webhook-1',
+    displayName: 'Order Sync',
+    description: 'Pushes order events downstream',
+    url: 'https://example.com/hooks/orders',
+    secret: 'shh',
+    eventKeys: ['frontegg.user.created'],
+    isActive: true,
+    invocations: 12,
+    createdAt: '2021-06-01T10:00:00.000Z',
+    updatedAt: '2021-06-01T10:00:00.000Z',
+  },
+  {
+    _id: 'webhook-2',
+    displayName: 'Audit Mirror',
+    description: 'Mirrors audit events',
+    url: 'https://example.com/hooks/audits',
+    secret: 'shh',
+    eventKeys: ['frontegg.user.deleted'],
+    isActive: false,
+    invocations: 0,
+    createdAt: '2021-06-02T10:00:00.000Z',
+    updatedAt: '2021-06-02T10:00:00.000Z',
+  },
+];

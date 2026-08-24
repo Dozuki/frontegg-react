@@ -103,6 +103,7 @@ test-component: ##@3 Tests component test with cypress
 	@echo "${YELLOW}Component Test Cypress${RESET}"
 	${MAKE} test-component-auth
 	${MAKE} test-component-audits
+	${MAKE} test-component-connectivity
 
 test-component-%:
 	@echo "${YELLOW}Component Test Cypress [${*}]${RESET}"

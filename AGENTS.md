@@ -44,13 +44,15 @@ Everything routes through the `Makefile` (`make help` for the full list): `init`
 
 | Target | Reality |
 | --- | --- |
-| `make test-component` | **The real suite.** 8 Cypress specs; passes. |
+| `make test-component` | **The real suite.** 9 Cypress specs; passes. |
 | `make test-unit` | Vacuous — zero test files, `--passWithNoTests`. |
 | `make test-integration` | Duplicate of `test-component` — same 8 specs, plus a demo-saas build nothing uses. |
 
-`make test-unit` is **not** a regression signal. Use `make test-component` — 4 specs in `packages/audits/src/tests`, 4 in `packages/auth/src/tests` (`*.cy-spec.tsx`). Cypress 5.3.0 arrives transitively via `cypress-react-unit-test`; no extra setup.
+`make test-unit` is **not** a regression signal. Use `make test-component` — 4 specs in `packages/audits/src/tests`, 4 in `packages/auth/src/tests`, 1 in `packages/connectivity/src/tests` (`*.cy-spec.tsx`). Cypress 5.3.0 arrives transitively via `cypress-react-unit-test`; no extra setup. `test-component` fans out to one `test-component-<pkg>` per package — **add a target there when you add a package's first spec**, or its specs silently never run.
 
-**Nothing tests `core` or `connectivity`** — all 8 specs are audits and auth, so our actual integration surface has zero coverage. `packages/demo-saas` does mount `WebhookComponent` under a `FronteggProvider` + `ConnectivityPlugin()` (`OldApp.tsx`), the same wiring as the monolith, but no spec points at it. Note demo-saas targets an upstream tenant (`https://david.frontegg.com`) and also loads `AuthPlugin` and `@frontegg/admin-portal`.
+`webhooks-list.cy-spec.tsx` covers our actual surface — it mounts `WebhookComponent` inside a `FronteggProvider` + `ConnectivityPlugin()`, the same wiring as the monolith, and exercises list render, search, status toggle, delete-with-confirm, and opening the create form against stubbed APIs.
+
+When stubbing, note `getBaseUrl` appends a `frontegg` prefix to `context.baseUrl`, so endpoints are `http://localhost:8080/frontegg/...` (see `WEBHOOKS_SERVICE` / `EVENTS_SERVICE` in `cypress/helpers.tsx`), and `WebhookComponent` renders behind a `<Route exact path={rootPath}>` — a spec must `navigateTo(rootPath)` or nothing mounts.
 
 `make test-integration` does **not** run `cypress/integration/auth.spec.ts`. That file can never run: `cypress.json` sets `testFiles: "**/*.cy-spec.*"`, which it doesn't match, and it imports `./constants`, which exists only as a `.d.ts` with no runtime module. Treat it as dead code. The target's demo-saas build and `serve` on :3000 are unused scaffolding — the component specs mount components directly.
 

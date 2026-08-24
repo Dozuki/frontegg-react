@@ -3,12 +3,22 @@
 import React, { FC } from 'react';
 import { FronteggProvider, PluginConfig, ContextOptions } from '@frontegg/react-core';
 import { uiLibrary } from '@frontegg/react-elements-semantic';
-import { auditsData, auditsDataDescName, auditsMetadata, auditsStats } from './consts';
+import {
+  auditsData,
+  auditsDataDescName,
+  auditsMetadata,
+  auditsStats,
+  webhookCategories,
+  webhookChannelMap,
+  webhookConfigurations,
+} from './consts';
 
 export const METADATA_SERVICE = 'http://localhost:8080/frontegg/metadata';
 export const IDENTITY_SERVICE = 'http://localhost:8080/frontegg/identity';
 export const AUDITS_SERVICE = 'http://localhost:8080/frontegg/audits';
 export const TEAM_SERVICE = 'http://localhost:8080/frontegg/team';
+export const WEBHOOKS_SERVICE = 'http://localhost:8080/frontegg/webhook';
+export const EVENTS_SERVICE = 'http://localhost:8080/frontegg/event/resources/configurations/v1';
 
 const contextOptions: ContextOptions = {
   baseUrl: `http://localhost:8080`,
@@ -221,3 +231,25 @@ export const checkEmailValidation = (emailSelector: string = '[name="email"]') =
 
 export const submitButtonSelector = 'button[type="submit"]';
 export const emailInputSelector = 'input[name="email"]';
+
+export const mockConnectivityApi = (webhooks: any[] = webhookConfigurations) => {
+  cy.route({
+    method: 'GET',
+    url: WEBHOOKS_SERVICE,
+    status: 200,
+    response: webhooks,
+  }).as('webhooks');
+  cy.route({
+    method: 'GET',
+    url: `${EVENTS_SERVICE}/categories`,
+    status: 200,
+    response: webhookCategories,
+  }).as('categories');
+  // getChannelMaps appends a ?channels= query, so match on the prefix.
+  cy.route({
+    method: 'GET',
+    url: `${EVENTS_SERVICE}?channels=*`,
+    status: 200,
+    response: webhookChannelMap,
+  }).as('channelMap');
+};
