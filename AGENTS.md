@@ -42,29 +42,28 @@ Everything routes through the `Makefile` (`make help` for the full list): `init`
 
 ## Tests
 
-| Target | Reality |
-| --- | --- |
-| `make test-component` | **The real suite.** 9 Cypress specs; passes. |
-| `make test-unit` | Vacuous — zero test files, `--passWithNoTests`. |
-| `make test-integration` | Duplicate of `test-component` — same 8 specs, plus a demo-saas build nothing uses. |
+`make test-component` is the only real suite — 9 Cypress specs (`*.cy-spec.tsx`), green in CI. `make test-unit` is vacuous (zero test files, `--passWithNoTests`) and is **not** a regression signal. `make test-integration` re-runs those same component specs behind a demo-saas build nothing uses.
 
-`make test-unit` is **not** a regression signal. Use `make test-component` — 4 specs in `packages/audits/src/tests`, 4 in `packages/auth/src/tests`, 1 in `packages/connectivity/src/tests` (`*.cy-spec.tsx`). Cypress 5.3.0 arrives transitively via `cypress-react-unit-test`; no extra setup. `test-component` fans out to one `test-component-<pkg>` per package — **add a target there when you add a package's first spec**, or its specs silently never run.
+Our coverage is `packages/connectivity/src/tests/webhooks-list.cy-spec.tsx`: it mounts `WebhookComponent` the way the monolith does and exercises list render, search, status toggle, delete (cancel and confirm), and opening the create form, all against stubbed APIs.
 
-`webhooks-list.cy-spec.tsx` covers our actual surface — it mounts `WebhookComponent` inside a `FronteggProvider` + `ConnectivityPlugin()`, the same wiring as the monolith, and exercises list render, search, status toggle, delete-with-confirm, and opening the create form against stubbed APIs.
+**The suite is deliberately trimmed** — 14 tests run, 18 are skipped. Kept: the webhooks tests, plus the auth/audits tests covering shared `core` components the webhooks UI reuses (`Table` render and sorting, `Popup`, `FInput`/`FButton`/`validateSchema`, `ErrorMessage`, `Loader`). Skipped: SAML, MFA, logout, account activation, forgot/reset navigation, the `AuthPlugin` header option, `Table` expandable rows, and one unresolved social-login failure. Each skip states its reason in-file; don't re-enable without one.
 
-When stubbing, note `getBaseUrl` appends a `frontegg` prefix to `context.baseUrl`, so endpoints are `http://localhost:8080/frontegg/...` (see `WEBHOOKS_SERVICE` / `EVENTS_SERVICE` in `cypress/helpers.tsx`), and `WebhookComponent` renders behind a `<Route exact path={rootPath}>` — a spec must `navigateTo(rootPath)` or nothing mounts.
+Adding a spec — four things that will otherwise cost you an hour:
 
-`make test-integration` does **not** run `cypress/integration/auth.spec.ts`. That file can never run: `cypress.json` sets `testFiles: "**/*.cy-spec.*"`, which it doesn't match, and it imports `./constants`, which exists only as a `.d.ts` with no runtime module. Treat it as dead code. The target's demo-saas build and `serve` on :3000 are unused scaffolding — the component specs mount components directly.
+- `test-component` fans out to one `test-component-<pkg>` target per package. Add one for a package's first spec, or its specs silently never run.
+- `getBaseUrl` prepends a `frontegg` segment to `context.baseUrl`, so stubs are `http://localhost:8080/frontegg/...` (see `WEBHOOKS_SERVICE` / `EVENTS_SERVICE` in `cypress/helpers.tsx`).
+- `WebhookComponent` renders behind `<Route exact path={rootPath}>` — a spec must `navigateTo(rootPath)` or nothing mounts.
+- Never `cy.get(rows).first().find(x)`. Cypress retries only the trailing `.find()`, against a row the re-render has since detached. Use one compound selector.
 
-One test is skipped: `login-flow.cy-spec.tsx` → *"Login with Social Login"*. The app never issues `GET /identity/resources/sso/v1`, so `cy.wait('@socialLogin')` times out. Not flaky, not a URL mismatch, not the saga wiring or `firstLoad` init — root cause unresolved, suspected 4.x-component / 5.64.4-state-layer mismatch. Skipped because we don't use auth.
+`cypress/integration/auth.spec.ts` is dead code: it doesn't match `testFiles: "**/*.cy-spec.*"` and imports a `./constants` that exists only as a `.d.ts`.
 
-`make lint` **fails** with 12 pre-existing tslint style errors (quotemark, prefer-const, array-type, …) across 14 untouched upstream files. Inherited from v4.0.23 — a red `make lint` is not something you broke. The actual pre-commit gate is `yarn prettier-check-hook`, which passes; format before committing.
+`make lint` **fails** with 12 pre-existing tslint style errors across 14 untouched upstream files. Inherited from v4.0.23 — a red `make lint` is not something you broke. The actual pre-commit gate is `yarn prettier-check-hook`, which passes; format before committing.
 
 ## CI
 
-One workflow, `.github/workflows/push.yml`: install, build, `test-component`, on every branch. It runs in the `cypress/browsers` container for Cypress's system libraries, with Node overridden from `.nvmrc`. `make lint` is deliberately not a step — it fails on inherited errors (below).
+One workflow, `.github/workflows/push.yml` — install, build, `test-component`, on every branch; currently green. It runs in the `cypress/browsers` container for Cypress's system libraries, with Node taken from `.nvmrc`. `make lint` is deliberately not a step, since it fails on the inherited errors above.
 
-Upstream's two publish workflows were deleted; packages are not published from this repo yet. The `publish-packages*` and `move-package-json-to-dist` Makefile targets they drove are now unreferenced but left in place.
+Upstream's two publish workflows were deleted; nothing is published from this repo yet. The `publish-packages*` and `move-package-json-to-dist` Makefile targets they drove remain, unreferenced.
 
 ## Notes
 
