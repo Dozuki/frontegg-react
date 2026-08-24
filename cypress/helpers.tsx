@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 
-import React, { FC } from 'react';
+import React, { FC, PropsWithChildren } from 'react';
 import { FronteggProvider, PluginConfig, ContextOptions } from '@frontegg/react-core';
 import { uiLibrary } from '@frontegg/react-elements-semantic';
 import {
@@ -25,9 +25,9 @@ const contextOptions: ContextOptions = {
   requestCredentials: 'include',
 };
 
-export type TestFronteggWrapperProps = {
+export type TestFronteggWrapperProps = PropsWithChildren<{
   plugins: PluginConfig[];
-};
+}>;
 export const TestFronteggWrapper: FC<TestFronteggWrapperProps> = (props) => (
   <FronteggProvider context={contextOptions} plugins={props.plugins} uiLibrary={uiLibrary}>
     {props.children}

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useRef } from 'react';
+import React, { FC, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { Middleware, Reducer, EnhancedStore } from '@frontegg/redux-store/toolkit';
 import { Provider, FronteggStoreContext } from '@frontegg/react-hooks';
 import { I18nextProvider } from 'react-i18next';
@@ -22,6 +22,8 @@ export interface PluginConfig {
 }
 
 export interface FeProviderProps {
+  /* @types/react@18 dropped the implicit children on FC, so consumers need it declared. */
+  children?: ReactNode;
   context: ContextOptions;
   plugins: PluginConfig[];
   uiLibrary?: Partial<Elements>;
