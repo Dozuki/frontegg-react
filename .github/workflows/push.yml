@@ -12,27 +12,41 @@ concurrency:
 
 jobs:
   build:
-    name: 'Install, Build and Test'
+    name: 'Build and test (React ${{ matrix.react }})'
     runs-on: ubuntu-latest
     # Supplies the system libraries Cypress needs; the Node it ships is overridden below.
     container: cypress/browsers:node-22.21.0-chrome-141.0.7390.107-1-ff-144.0-edge-141.0.3537.92-1
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The version the monolith runs. Full suite.
+          - react: '18'
+            version: '18.2.0'
+            test: test-component
+          # Compatibility leg. Skips audits, whose google-map-react calls the
+          # ReactDOM.findDOMNode React 19 removed; see the Makefile target.
+          - react: '19'
+            version: '19.2.0'
+            test: test-component-react19
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
       - run: make install
+      - run: make use-react-${{ matrix.version }}
       - run: make build
-      - run: make test-component
+      - run: make ${{ matrix.test }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-screenshots
+          name: cypress-screenshots-react-${{ matrix.react }}
           path: cypress/screenshots
           if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-videos
+          name: cypress-videos-react-${{ matrix.react }}
           path: cypress/videos
           if-no-files-found: ignore

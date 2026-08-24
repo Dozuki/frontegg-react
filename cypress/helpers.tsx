@@ -40,6 +40,9 @@ declare global {
 }
 
 export const navigateTo = (path: string) => {
+  // FronteggProvider publishes its router history during render, and mount() can
+  // resolve before React has committed that first render.
+  cy.window().should((win) => expect(win.cypressHistory, 'router history').to.exist);
   cy.window().then((win) => {
     win.cypressHistory.push(path);
   });

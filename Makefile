@@ -102,6 +102,18 @@ test-component-%:
 	@echo "${YELLOW}Component Test Cypress [${*}]${RESET}"
 	@./node_modules/.bin/cypress run --component --spec "packages/${*}/src/tests/**/*.cy-spec.tsx"
 
+# audits is left out: its IP popup uses google-map-react, which calls the
+# ReactDOM.findDOMNode that React 19 removed. Nothing consumes audits, and neither
+# core nor connectivity -- the packages the monolith imports -- touches it.
+test-component-react19: ##@3 Tests component specs that are React 19 clean
+	@echo "${YELLOW}Component Test Cypress [react 19]${RESET}"
+	${MAKE} test-component-auth
+	${MAKE} test-component-connectivity
+
+use-react-%: ##@1 Global repin the installed react to a major version, for the CI matrix
+	@node scripts/set-react-version.js ${*}
+	@yarn install
+
 test-unit: ##@3 Tests unit test with jest
 	@echo "${YELLOW}Unit Test Jest${RESET}"
 	@./node_modules/.bin/lerna run test --parallel
