@@ -67,7 +67,7 @@ Adding a spec — five things that will otherwise cost you an hour:
 
 ## CI
 
-One workflow, `.github/workflows/push.yml`, on every branch: install, `make use-react-<version>`, build, test. Two matrix legs — React 18 (full suite) and React 19 (`test-component-react19`) — in the `cypress/browsers` container for Cypress's system libraries, with Node from `.nvmrc`. `make lint` is deliberately not a step, since it fails on the inherited errors above.
+One workflow, `.github/workflows/push.yml`, on every branch: install, `make use-react-<version>`, build, test. Two matrix legs — React 18 (full suite) and React 19 (`test-component-react19`) — on a plain `ubuntu-latest` runner with Node from `.nvmrc`. No container: the runner already ships `make`, `xvfb` and, through its preinstalled browsers, the shared libraries Cypress's Electron links against. `make lint` is deliberately not a step, since it fails on the inherited errors above.
 
 Upstream's two publish workflows were deleted; nothing is published from here yet. `make move-package-json-to-dist` (wired to the root `prepublishOnly`) rewrites each `dist/package.json`, promoting `react`, `react-dom`, `react-router-dom` and the `@frontegg/*` siblings from `dependencies` into `peerDependencies` — which is why `core` keeps react only in `devDependencies` and hand-declares its peer range. The `publish-packages*` targets are unreferenced.
 
