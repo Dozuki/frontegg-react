@@ -1,7 +1,8 @@
 import React, { FC, useEffect, useMemo } from 'react';
 import { Grid, Loader } from '@frontegg/react-core';
 import { SlackSvg } from '../../elements/Svgs';
-import { useConnectivityActions, useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../../hooks';
 
 const defaultScope = ['chat:write', 'channels:read', 'chat:write.public'].join(',');
 

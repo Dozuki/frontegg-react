@@ -8,7 +8,7 @@ export * from './RootPathContext';
 export * from './DialogContext';
 export { default as Logger } from './Logger';
 
-export function omitProps<T>(props: any, keys: string[]): T {
+export function omitProps<T = any>(props: any, keys: string[]): T {
   const newProps = { ...props };
   keys.forEach((key) => {
     delete newProps[key];

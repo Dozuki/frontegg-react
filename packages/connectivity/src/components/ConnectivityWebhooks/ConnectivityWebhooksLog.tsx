@@ -4,7 +4,8 @@ import { useHistory } from 'react-router-dom';
 import { Button, Dialog, Grid, Icon, Table, TableColumnProps, useT } from '@frontegg/react-core';
 import { IWebhookLocationState } from './interfaces';
 import { IWebhookLog } from '@frontegg/rest-api';
-import { useConnectivityActions, useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../../hooks';
 
 enum TriggerType {
   RETRY = 'RETRY',
@@ -36,13 +37,14 @@ export const ConnectivityWebhooksLog: FC = () => {
   const { webhookLogs } = useConnectivityState();
   const { loadWebhookLogsAction, cleanWebhookLogsData, postWebhookRetryAction } = useConnectivityActions();
 
-  const data = useMemo(
+  // triggerType rides along on the API rows but isn't declared on rest-api's IWebhookLog.
+  const data = useMemo<IWebhookData[]>(
     () =>
-      webhookLogs?.rows?.map((log) => ({
+      (webhookLogs?.rows?.map((log) => ({
         ...log,
         ...formatDate(log.createdAt),
         status: validateStatus(log.statusCode),
-      })) ?? [],
+      })) as IWebhookData[]) ?? [],
     [webhookLogs]
   );
 

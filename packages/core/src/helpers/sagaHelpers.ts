@@ -1,7 +1,7 @@
 import { delay, select, PayloadAction } from '@frontegg/redux-store/toolkit';
 import { ContextOptions } from '../interfaces';
 
-export function* getContext() {
+export function* getContext(): Generator<any, ContextOptions, any> {
   let result;
   do {
     const availableContext = yield select(({ root: { context } }) => context);

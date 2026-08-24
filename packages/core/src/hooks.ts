@@ -5,7 +5,7 @@ import { useSelector, useDispatch, shallowEqual } from '@frontegg/react-hooks';
 
 export { useSelector, useDispatch, shallowEqual };
 export { FFormik };
-export const useT = (): UseTranslationResponse => useTranslation();
+export const useT = (): UseTranslationResponse<string> => useTranslation();
 
 export function useDebounce<T>(value: T, delay: number) {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);

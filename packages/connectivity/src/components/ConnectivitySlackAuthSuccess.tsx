@@ -1,7 +1,8 @@
 import { Loader, RootPathContext } from '@frontegg/react-core';
 import React, { FC, useContext, useLayoutEffect } from 'react';
 import { useLocation, Redirect } from 'react-router-dom';
-import { useConnectivityState, useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../hooks';
 
 export const ConnectivitySlackAuthSuccess: FC = () => {
   const { postCodeAction } = useConnectivityActions();

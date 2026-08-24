@@ -11,7 +11,8 @@ import {
   Input,
   ErrorMessage,
 } from '@frontegg/react-core';
-import { useConnectivityActions, useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../../hooks';
 
 export interface IConnectivityWebhookTestForm {
   secret: string;

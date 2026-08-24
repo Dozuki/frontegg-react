@@ -6,7 +6,7 @@ import { IConnectivityData, TPlatform } from '../interfaces';
 import { ConnectivityPanel } from './ConnectivityPanel';
 import { platformForm } from '../consts';
 import { CheckSvg, channelsSvgs } from '../elements/Svgs';
-import { useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../hooks';
 
 interface ILocationState {
   open: TPlatform;

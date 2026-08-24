@@ -49,7 +49,7 @@ export const channels2Platform: Record<
   slack: {
     title: 'connectivity.slack',
     events: (data) => (data as ISlackConfigurations)?.slackSubscriptions?.length || 0,
-    isActive: (data) => !!(data as ISlackConfigurations)?.slackSubscriptions.some(({ isActive }) => isActive) ?? false,
+    isActive: (data) => (data as ISlackConfigurations)?.slackSubscriptions?.some(({ isActive }) => isActive) ?? false,
     image: SlackSvg,
   },
   webhook: {

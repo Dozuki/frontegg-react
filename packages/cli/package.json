@@ -17,7 +17,7 @@
     "handlebars": "^4.7.6",
     "history": "^4.9.0",
     "prompts": "^2.3.2",
-    "tslib": "^2.0.1",
+    "tslib": "^2.8.1",
     "yargs": "^15.4.1"
   },
   "devDependencies": {

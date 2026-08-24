@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { ConnectivityWebhooksForm } from './ConnectivityWebhooksForm';
 import { ConnectivityWebhooksLog } from './ConnectivityWebhooksLog';
 import { IWebhookLocationState } from './interfaces';
-import { useConnectivityState } from '@frontegg/react-hooks';
+import { unwrapWebhooks, useConnectivityState } from '../../hooks';
 
 const itemsArray = ['common.detail', 'common.logs'];
 
@@ -20,9 +20,9 @@ export const ConnectivityWebhooksEdit: FC = () => {
   const { error, webhook, isSaving } = useConnectivityState();
 
   const prevIsSaving = usePrevious(isSaving);
-  const preparedWebhook = webhook?.data ?? webhook;
+  const preparedWebhook = unwrapWebhooks(webhook);
   const data = useMemo(() => webhook && preparedWebhook?.find(({ _id }) => _id === locationState.id), [
-    webhook?.data,
+    webhook,
     locationState,
   ]);
 

@@ -20,7 +20,8 @@ import { AccordingCategories } from '../../elements/AccordingCategories';
 import { SelectWebhook } from '../../elements/SelectWebhook';
 import { filterCategories } from '../../utils';
 import { ConnectivityWebhooksTestForm } from './ConnectivityWebhooksTestFrom';
-import { useConnectivityActions, useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../../hooks';
 
 export interface IConnectivityWebhooksForm {
   data: IWebhooksSaveData | null;

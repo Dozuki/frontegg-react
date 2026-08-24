@@ -123,7 +123,7 @@ export const buildComponents = <P extends {}>(components: any, defaultComponents
     .reduce((p: any, comp: any) => ({ ...p, ...comp }), {});
 };
 
-export const useDynamicComponents = <COMPS, A, P extends { components?: ComponentsTypesWithProps<COMPS> }>(
+export const useDynamicComponents = <COMPS, A extends {}, P extends { components?: ComponentsTypesWithProps<COMPS> }>(
   defaultComponents: A,
   props: P
 ) => {

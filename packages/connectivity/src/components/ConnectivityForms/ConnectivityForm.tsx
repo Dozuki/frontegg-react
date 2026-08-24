@@ -16,7 +16,8 @@ import { IConnectivityComponent, IEventFormData, ITableFormData } from '../../in
 import { filterCategories } from '../../utils';
 import { FConnectivityCheckBox } from '../../elements/ConnectivityCheckBox';
 import { InputEmailOrPhone } from '../../elements/InputEmailOrPhone';
-import { useConnectivityActions, useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../../hooks';
 
 interface IConnectivityForm extends IConnectivityComponent {
   form: 'email' | 'sms';

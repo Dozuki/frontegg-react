@@ -17,7 +17,8 @@ import {
 import { IWebhookLocationState } from './interfaces';
 import { filterCategories, selectedEvents } from '../../utils';
 import { ConnectivityCheckBox } from '../../elements/ConnectivityCheckBox';
-import { useConnectivityActions, useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { unwrapWebhooks, useConnectivityState } from '../../hooks';
 
 interface IEventCount {
   name: string;
@@ -48,7 +49,7 @@ export const ConnectivityWebhooksList: FC = () => {
   }, [isSaving, onRemove, remove, prevSaving]);
   const cleanCatagories = filterCategories(categories, channelMap && channelMap.webhook);
 
-  const preparedWebhookState = webhookState?.data ?? webhookState;
+  const preparedWebhookState = unwrapWebhooks(webhookState);
   const webhook = useMemo(
     () =>
       preparedWebhookState?.map((elm) => {

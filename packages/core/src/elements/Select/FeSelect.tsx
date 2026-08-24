@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { ComponentType, useCallback, useState } from 'react';
 import { SelectProps, SelectOptionProps } from './interfaces';
 import Select, { components, MultiValueProps } from 'react-select';
 import { useT } from '../../hooks';
@@ -39,10 +39,11 @@ export const FeSelect = (props: SelectProps) => {
     []
   );
 
+  // @types/react-select@3 predates the JSX typings in @types/react 16.14, so its
+  // component map doesn't typecheck as a JSX element.
+  const SelectMultiValueLabel = components.MultiValueLabel as ComponentType<any>;
   const MultiValueLabel = useCallback(
-    (props) => (
-      <components.MultiValueLabel {...props}>{renderOption?.(props.data, getState(props))}</components.MultiValueLabel>
-    ),
+    (props) => <SelectMultiValueLabel {...props}>{renderOption?.(props.data, getState(props))}</SelectMultiValueLabel>,
     [renderOption]
   );
 
@@ -87,7 +88,7 @@ export const FeSelect = (props: SelectProps) => {
       isLoading={loading ?? false}
       {...(multiselect && { closeMenuOnSelect: false })}
       onBlur={(e) => {
-        onBlur && onBlur({ ...e, target: { ...e.target, name } });
+        onBlur && onBlur({ ...e, target: { ...e.target, name } } as any);
       }}
       menuIsOpen={openProps ?? open}
       loadingMessage={() => loadingText ?? `${t('common.loading')}...`}

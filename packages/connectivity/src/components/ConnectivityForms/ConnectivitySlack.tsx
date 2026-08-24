@@ -18,7 +18,8 @@ import { SelectSlack } from '../../elements/SelectSlack';
 import { FConnectivityCheckBox } from '../../elements/ConnectivityCheckBox';
 import { ConnectivitySlackAuth } from './ConnectivitySlackAuth';
 import { MessageSlack } from '../../elements/MessageSlack';
-import { useConnectivityActions, useConnectivityState } from '@frontegg/react-hooks';
+import { useConnectivityActions } from '@frontegg/react-hooks';
+import { useConnectivityState } from '../../hooks';
 
 export const ConnectivitySlack: FC<IConnectivityComponent> = () => {
   const { t } = useT();
