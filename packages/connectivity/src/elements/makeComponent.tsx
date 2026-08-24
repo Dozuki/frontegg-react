@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useLayoutEffect } from 'react';
 import classnames from 'classnames';
-import { useHistory, Route } from 'react-router-dom';
+import { useHistory, useLocation, Route } from 'react-router-dom';
 import { RootPathContext, useDispatch } from '@frontegg/react-core';
 import { ConnectivityContentProps } from '../components/ConnectivityContent';
 import { TPlatform } from '../interfaces';
@@ -18,14 +18,16 @@ export const makeComponent = ({ type, defaultPath }: IMakeComponent): FC<Connect
 }) => {
   const { loadDataAction, initData } = useConnectivityActions();
   const dispatch = useDispatch();
-  const {
-    replace: historyReplace,
-    location: { state, ...location },
-  } = useHistory();
+  const history = useHistory();
+  const { state } = useLocation();
 
+  // Read the location inside the effect rather than capturing it at render: under
+  // React 18 the effect can run after a navigation, and replacing with the captured
+  // location silently undoes it.
   useEffect(() => {
-    !state && historyReplace({ ...location, state: {} });
-  }, [historyReplace, location, state]);
+    const { state: currentState, ...currentLocation } = history.location;
+    !currentState && history.replace({ ...currentLocation, state: {} });
+  }, [history, state]);
 
   useLayoutEffect(() => {
     loadDataAction([type]);
