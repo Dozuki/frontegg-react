@@ -2,7 +2,6 @@
 
 import React, { FC, PropsWithChildren } from 'react';
 import { FronteggProvider, PluginConfig, ContextOptions } from '@frontegg/react-core';
-import { uiLibrary } from '@frontegg/react-elements-semantic';
 import {
   auditsData,
   auditsDataDescName,
@@ -29,7 +28,7 @@ export type TestFronteggWrapperProps = PropsWithChildren<{
   plugins: PluginConfig[];
 }>;
 export const TestFronteggWrapper: FC<TestFronteggWrapperProps> = (props) => (
-  <FronteggProvider context={contextOptions} plugins={props.plugins} uiLibrary={uiLibrary}>
+  <FronteggProvider context={contextOptions} plugins={props.plugins}>
     {props.children}
   </FronteggProvider>
 );
@@ -192,7 +191,7 @@ export const checkEmailValidation = (emailSelector: string = '[name="email"]') =
   cy.get(emailSelector).focus().clear().blur();
   cy.contains('The Email is required').should('be.visible');
   cy.get(emailSelector).focus().clear().type(EMAIL_1).blur();
-  cy.get(emailSelector).parents('.field').should('not.have.class', 'error');
+  cy.get(emailSelector).parents('.fe-input__inner').should('not.have.class', 'fe-input__inner-error');
 };
 
 export const submitButtonSelector = 'button[type="submit"]';

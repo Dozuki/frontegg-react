@@ -65,9 +65,9 @@ describe('Login Tests', () => {
     mount(<TestFronteggWrapper plugins={[AuthPlugin(defaultAuthPlugin)]}>Home</TestFronteggWrapper>);
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
-    cy.get('.loader').should('exist');
+    cy.get('.fe-loader').should('exist');
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const submitSelector = 'button[type=submit]';
 
@@ -124,7 +124,7 @@ describe('Login Tests', () => {
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     const passwordSelector = '[name="password"]';
@@ -168,7 +168,7 @@ describe('Login Tests', () => {
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     const passwordSelector = '[name="password"]';
@@ -223,7 +223,7 @@ describe('Login Tests', () => {
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     const passwordSelector = '[name="password"]';
@@ -263,7 +263,7 @@ describe('Login Tests', () => {
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const passwordSelector = '[name="password"]';
     const submitSelector = 'button[type=submit]';
@@ -360,7 +360,7 @@ describe('Login Tests', () => {
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const submitSelector = 'button[type=submit]';
     const codeSelector = '[name="code"]';
@@ -434,7 +434,7 @@ describe('Login Tests', () => {
 
     navigateTo(defaultAuthPlugin.routes.loginUrl);
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const submitSelector = 'button[type=submit]';
     const codeSelector = '[name="code"]';
@@ -500,7 +500,7 @@ describe('Login Tests', () => {
       '@publicConfigurations',
       '@publicAuthStrategyConfigurations',
     ]);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     cy.location('origin').then((origin) => {
       const loginWithGoogleSelector = '[data-test-id="googleSocialLogin-btn"]';
@@ -524,7 +524,7 @@ describe('Login Tests', () => {
       mockAuthMe();
       navigateTo(defaultAuthPlugin.routes.socialLoginCallbackUrl + GOOGLE_AUTH_RESPONSE);
 
-      cy.get('.loader').should('not.exist');
+      cy.get('.fe-loader').should('not.exist');
       cy.wait(['@submitSocialLogin', '@refreshToken', '@meTenants', '@me']);
 
       cy.wait(1000);
@@ -546,7 +546,7 @@ describe('Login Tests', () => {
   //
   //   navigateTo(defaultAuthPlugin.routes.loginUrl);
   //   cy.wait(['@refreshToken', '@metadata', '@socialLogin', '@publicConfigurations']);
-  //   cy.get('.loader').should('not.exist');
+  //   cy.get('.fe-loader').should('not.exist');
   //
   //   cy.location('origin').then((origin) => {
   //     const loginWithGoogleSelector = '[data-test-id="googleSocialLogin-btn"]';
@@ -557,7 +557,7 @@ describe('Login Tests', () => {
   //
   //     navigateTo(defaultAuthPlugin.routes.socialLoginCallbackUrl + GOOGLE_AUTH_RESPONSE);
   //
-  //     cy.get('.loader').should('not.exist');
+  //     cy.get('.fe-loader').should('not.exist');
   //
   //     const redirectUri = origin + defaultAuthPlugin.routes.socialLoginCallbackUrl;
   //     cy.intercept('POST', `${IDENTITY_SERVICE}/resources/auth/v1/user/sso/google/postlogin?code=google_auth_code?redirectUri=${redirectUri}`, { statusCode: 200, body: {}, delay: 200 }).as('submitSocialLogin');

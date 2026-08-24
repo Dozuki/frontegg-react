@@ -35,7 +35,7 @@ describe('Forgot Password Tests', () => {
     navigateTo(defaultAuthPlugin.routes.loginUrl);
 
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     cy.get(emailInputSelector).focus().clear().type(EMAIL_1).blur();
     cy.get('[data-test-id="forgotPassBtn"]').click();
@@ -60,7 +60,7 @@ describe('Forgot Password Tests', () => {
     navigateTo(defaultAuthPlugin.routes.loginUrl);
 
     cy.wait(['@refreshToken', '@metadata']);
-    cy.get('.loader').should('not.exist');
+    cy.get('.fe-loader').should('not.exist');
 
     const emailSelector = '[name="email"]';
     cy.get(emailSelector).focus().clear().type(EMAIL_1).blur();
