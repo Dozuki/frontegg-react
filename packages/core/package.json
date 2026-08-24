@@ -48,8 +48,8 @@
     "@types/react-router-dom": "^5.1.2",
     "@types/react-select": "^3.0.22",
     "@types/react-table": "^7.0.23",
-    "react": ">16.8.6",
-    "react-dom": ">16.8.6"
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   },
   "jest": {
     "preset": "ts-jest",

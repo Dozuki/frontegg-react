@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/react": "^16.9.19",
-    "react": ">16.8.6"
+    "react": "18.2.0"
   },
   "jest": {
     "preset": "ts-jest",
