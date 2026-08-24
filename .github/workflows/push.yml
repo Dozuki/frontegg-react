@@ -1,33 +1,38 @@
-name: Push Workflow
-on:
-  # When after commit pushed to branches not master nad release/next
-  push:
-    branches-ignore:
-      - 'master'
-      - 'release/next'
+name: CI
+# Runs on every branch, master included. Checks attach to the commit, so a PR
+# shows the result without a second pull_request-triggered run.
+on: push
+
 env:
   CI: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  init:
+  build:
     name: 'Install, Build and Test'
     runs-on: ubuntu-latest
+    # Supplies the system libraries Cypress 5 needs; the Node it ships is overridden below.
     container: cypress/browsers:node12.13.0-chrome80-ff74
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 12
-      - run: make clean
+          node-version-file: '.nvmrc'
       - run: make install
       - run: make build
       - run: make test-component
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots
           path: cypress/screenshots
-      - uses: actions/upload-artifact@v1
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-videos
           path: cypress/videos
+          if-no-files-found: ignore
