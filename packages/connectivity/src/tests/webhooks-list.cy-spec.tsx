@@ -1,7 +1,14 @@
 import React from 'react';
 import { mount } from 'cypress/react';
 import { ConnectivityPlugin, WebhookComponent } from '../index';
-import { mockConnectivityApi, navigateTo, TestFronteggWrapper, WEBHOOKS_SERVICE } from '../../../../cypress/helpers';
+import {
+  EVENTS_SERVICE_NO_PREFIX,
+  mockConnectivityApi,
+  navigateTo,
+  TestFronteggWrapper,
+  WEBHOOKS_SERVICE,
+  WEBHOOKS_SERVICE_NO_PREFIX,
+} from '../../../../cypress/helpers';
 
 // Mirrors the monolith's only Frontegg integration (manage_webhooks.tsx): a
 // WebhookComponent inside a FronteggProvider carrying ConnectivityPlugin.
@@ -85,5 +92,26 @@ describe('Connectivity Webhooks', () => {
     cy.get('[data-test-id="addBtn"]').click();
     cy.get('.fe-connectivity-webhook-list').should('not.exist');
     cy.get('form').should('be.visible');
+  });
+});
+
+describe('Connectivity Webhooks API urls', () => {
+  // rest-api defaults every request to a `/frontegg` segment under baseUrl, which a
+  // consumer serving these APIs from its own backend has no use for.
+  it('drops the path segment entirely when urlPrefix is empty', () => {
+    mockConnectivityApi(undefined, {
+      webhooksService: WEBHOOKS_SERVICE_NO_PREFIX,
+      eventsService: EVENTS_SERVICE_NO_PREFIX,
+    });
+    mount(
+      <TestFronteggWrapper plugins={[ConnectivityPlugin()]} context={{ urlPrefix: '' }}>
+        <WebhookComponent rootPath={ROOT_PATH} />
+      </TestFronteggWrapper>
+    );
+    navigateTo(ROOT_PATH);
+
+    cy.wait('@webhooks').its('request.url').should('eq', WEBHOOKS_SERVICE_NO_PREFIX);
+    cy.wait(['@categories', '@channelMap']);
+    cy.get('.fe-table__tbody .fe-table__tr').should('have.length', 2);
   });
 });

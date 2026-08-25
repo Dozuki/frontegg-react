@@ -102,6 +102,7 @@ export interface ContextOptions {
   currentUserId?: string;
   currentUserRoles?: string[];
   currentUserPermissions?: string[];
+  /** Path segment appended to `baseUrl`; defaults to `frontegg`. `''` means no segment. */
   urlPrefix?: string;
   logLevel?: LogLevel;
   auditsOptions?: {

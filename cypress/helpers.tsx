@@ -19,6 +19,10 @@ export const TEAM_SERVICE = 'http://localhost:8080/frontegg/team';
 export const WEBHOOKS_SERVICE = 'http://localhost:8080/frontegg/webhook';
 export const EVENTS_SERVICE = 'http://localhost:8080/frontegg/event/resources/configurations/v1';
 
+// The same two services with `urlPrefix: ''`, i.e. served straight off baseUrl.
+export const WEBHOOKS_SERVICE_NO_PREFIX = 'http://localhost:8080/webhook';
+export const EVENTS_SERVICE_NO_PREFIX = 'http://localhost:8080/event/resources/configurations/v1';
+
 const contextOptions: ContextOptions = {
   baseUrl: `http://localhost:8080`,
   requestCredentials: 'include',
@@ -26,9 +30,10 @@ const contextOptions: ContextOptions = {
 
 export type TestFronteggWrapperProps = PropsWithChildren<{
   plugins: PluginConfig[];
+  context?: Partial<ContextOptions>;
 }>;
 export const TestFronteggWrapper: FC<TestFronteggWrapperProps> = (props) => (
-  <FronteggProvider context={contextOptions} plugins={props.plugins}>
+  <FronteggProvider context={{ ...contextOptions, ...props.context }} plugins={props.plugins}>
     {props.children}
   </FronteggProvider>
 );
@@ -200,9 +205,12 @@ export const checkEmailValidation = (emailSelector: string = '[name="email"]') =
 export const submitButtonSelector = 'button[type="submit"]';
 export const emailInputSelector = 'input[name="email"]';
 
-export const mockConnectivityApi = (webhooks: any[] = webhookConfigurations) => {
-  cy.intercept('GET', WEBHOOKS_SERVICE, { statusCode: 200, body: webhooks }).as('webhooks');
-  cy.intercept('GET', `${EVENTS_SERVICE}/categories`, { statusCode: 200, body: webhookCategories }).as('categories');
+export const mockConnectivityApi = (
+  webhooks: any[] = webhookConfigurations,
+  { webhooksService = WEBHOOKS_SERVICE, eventsService = EVENTS_SERVICE } = {}
+) => {
+  cy.intercept('GET', webhooksService, { statusCode: 200, body: webhooks }).as('webhooks');
+  cy.intercept('GET', `${eventsService}/categories`, { statusCode: 200, body: webhookCategories }).as('categories');
   // getChannelMaps appends a ?channels= query, so match on the prefix.
-  cy.intercept('GET', `${EVENTS_SERVICE}?channels=*`, { statusCode: 200, body: webhookChannelMap }).as('channelMap');
+  cy.intercept('GET', `${eventsService}?channels=*`, { statusCode: 200, body: webhookChannelMap }).as('channelMap');
 };

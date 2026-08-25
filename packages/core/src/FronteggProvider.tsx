@@ -3,6 +3,7 @@ import { Middleware, Reducer, EnhancedStore } from '@frontegg/redux-store/toolki
 import { Provider, FronteggStoreContext } from '@frontegg/react-hooks';
 import { I18nextProvider } from 'react-i18next';
 import { ContextOptions, ListenerProps, LogLevel } from './interfaces';
+import { resolveApiContext } from './helpers/apiContext';
 import { i18n } from './I18nInitializer';
 import { BrowserRouter, useHistory, useLocation } from 'react-router-dom';
 import { Elements, ElementsFactory } from './ElementsFactory';
@@ -57,6 +58,7 @@ const FePlugins: FC<FeProviderProps> = (props) => {
 };
 
 const FeState: FC<FeProviderProps> = (props) => {
+  const context = resolveApiContext(props.context);
   const history = useHistory();
   const storeRef = useRef<any>({});
   const location = useLocation();
@@ -86,7 +88,7 @@ const FeState: FC<FeProviderProps> = (props) => {
     () =>
       props.store ??
       createFronteggStore(
-        { context: props.context },
+        { context },
         storeRef.current,
         false,
         {
@@ -95,8 +97,8 @@ const FeState: FC<FeProviderProps> = (props) => {
         },
         {
           audits: {
-            context: props.context,
-            ...props.context.auditsOptions,
+            context,
+            ...context.auditsOptions,
             ...(props.plugins?.find((n) => n.storeName === 'audits')?.preloadedState ?? {}),
           } as any,
         }
@@ -130,7 +132,9 @@ const FeState: FC<FeProviderProps> = (props) => {
 const defaultLogLevel: LogLevel = 'error';
 
 export const FronteggProvider: FC<FeProviderProps> = (props) => {
-  ContextHolder.setContext({ ...props.context, logLevel: props.context.logLevel || defaultLogLevel });
+  ContextHolder.setContext(
+    resolveApiContext({ ...props.context, logLevel: props.context.logLevel || defaultLogLevel })
+  );
   ElementsFactory.setElements(props.uiLibrary);
 
   const withRouter = !useHistory();
