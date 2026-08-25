@@ -94,10 +94,8 @@ export const createConnectivitySagas = (api: ConnectivityApi) => {
   function* testWebhook({ payload }: any) {
     try {
       yield put(actions.setConnectivityState({ isTesting: true }));
-      const { statusCode, body } = yield call(api.testWebhook, payload);
-      const testResult: IWebhookTestResult = [200, 201].includes(statusCode)
-        ? { status: 'success', message: JSON.stringify(body, null, 2) }
-        : { status: 'failed' };
+      const { success, message } = yield call(api.testWebhook, payload);
+      const testResult: IWebhookTestResult = success ? { status: 'success', message } : { status: 'failed', message };
       yield put(actions.setConnectivityState({ isTesting: false, testResult }));
     } catch (e) {
       yield put(

@@ -9,6 +9,8 @@ export interface ConnectivityApiAdapters {
   eventCategories(response: any): ICategory[];
   channelMap(response: any): IChannelsMap[];
   webhookLogs(response: any): any;
+  /** Normalises a test response into what the UI shows. */
+  webhookTest(response: any): { success: boolean; message?: string };
   /** Applied to the form's payload before it is sent. */
   saveWebhookRequest(data: IWebhooksSaveData): any;
 }
@@ -20,5 +22,9 @@ export const passthroughAdapters: ConnectivityApiAdapters = {
   eventCategories: identity,
   channelMap: identity,
   webhookLogs: identity,
+  webhookTest: (response: any) =>
+    [200, 201].includes(response?.statusCode)
+      ? { success: true, message: JSON.stringify(response?.body, null, 2) }
+      : { success: false },
   saveWebhookRequest: identity,
 };

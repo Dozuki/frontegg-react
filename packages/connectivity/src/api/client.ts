@@ -36,7 +36,7 @@ export const createConnectivityApi = (overrides: ConnectivityApiOverrides = {}):
       return data._id ? Patch(routes.updateWebhook(data._id), body) : Post(routes.createWebhook(), body);
     },
     deleteWebhook: (id) => Delete(routes.deleteWebhook(id)),
-    testWebhook: (data) => Post(routes.testWebhook(), data),
+    testWebhook: async (data) => adapt.webhookTest(await Post(routes.testWebhook(), data)),
     loadWebhookLogs: async (id, offset, limit) => adapt.webhookLogs(await Get(routes.webhookLogs(id, offset, limit))),
     retryWebhookLog: (logId) => Post(routes.retryWebhookLog(logId)),
     listEventCategories: async () => adapt.eventCategories(await Get(routes.eventCategories())),

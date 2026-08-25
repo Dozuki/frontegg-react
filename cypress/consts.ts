@@ -365,3 +365,59 @@ export const webhookConfigurations = [
     updatedAt: '2021-06-02T10:00:00.000Z',
   },
 ];
+
+// Payloads shaped like dozuki-services' webhook DTOs, not Frontegg's.
+export const servicesWebhooks = [
+  {
+    id: 'wh-1',
+    title: 'Order Sync',
+    description: 'Pushes order events downstream',
+    url: 'https://example.test/hooks/orders',
+    enabled: true,
+    eventKeys: ['frontegg.user.created'],
+    invocationCount: 12,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-02T00:00:00.000Z',
+  },
+  {
+    id: 'wh-2',
+    title: 'Audit Mirror',
+    description: null,
+    url: 'https://example.test/hooks/audit',
+    enabled: false,
+    eventKeys: ['frontegg.user.deleted'],
+    invocationCount: 0,
+    createdAt: '2026-01-03T00:00:00.000Z',
+    updatedAt: '2026-01-04T00:00:00.000Z',
+  },
+];
+
+export const servicesCategories = [
+  {
+    id: 'cat-1',
+    name: 'Users',
+    events: [
+      { id: 'ev-1', key: 'frontegg.user.created', displayName: 'User created', description: '', categoryId: 'cat-1' },
+      { id: 'ev-2', key: 'frontegg.user.deleted', displayName: 'User deleted', description: '', categoryId: 'cat-1' },
+    ],
+  },
+];
+
+export const servicesChannelMap = [
+  {
+    id: 'ev-1',
+    key: 'frontegg.user.created',
+    categoryId: 'cat-1',
+    displayName: 'User created',
+    description: '',
+    category: { id: 'cat-1', name: 'Users' },
+  },
+  {
+    id: 'ev-2',
+    key: 'frontegg.user.deleted',
+    categoryId: 'cat-1',
+    displayName: 'User deleted',
+    description: '',
+    category: { id: 'cat-1', name: 'Users' },
+  },
+];
