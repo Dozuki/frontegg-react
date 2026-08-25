@@ -1,6 +1,7 @@
 import React from 'react';
 import { mount } from 'cypress/react';
 import { ConnectivityPlugin, WebhookComponent } from '../index';
+import { webhookCategories, webhookChannelMap, webhookConfigurations } from '../../../../cypress/consts';
 import {
   EVENTS_SERVICE_NO_PREFIX,
   mockConnectivityApi,
@@ -113,5 +114,60 @@ describe('Connectivity Webhooks API urls', () => {
     cy.wait('@webhooks').its('request.url').should('eq', WEBHOOKS_SERVICE_NO_PREFIX);
     cy.wait(['@categories', '@channelMap']);
     cy.get('.fe-table__tbody .fe-table__tr').should('have.length', 2);
+  });
+});
+
+// Shaped like dozuki-services' webhook module, which shares no path with Frontegg's.
+const SERVICES = 'http://localhost:8080/api/webhooks';
+const servicesRoutes = {
+  listWebhooks: () => '/api/webhooks',
+  createWebhook: () => '/api/webhooks',
+  updateWebhook: (id: string) => `/api/webhooks/${id}`,
+  deleteWebhook: (id: string) => `/api/webhooks/${id}`,
+  eventCategories: () => '/api/webhooks/catalog/categories',
+  channelMap: () => '/api/webhooks/catalog/channel-map',
+};
+
+const mountAgainstServices = () => {
+  cy.intercept('GET', SERVICES, { statusCode: 200, body: webhookConfigurations }).as('webhooks');
+  cy.intercept('GET', `${SERVICES}/catalog/categories`, { statusCode: 200, body: webhookCategories }).as('categories');
+  cy.intercept('GET', `${SERVICES}/catalog/channel-map`, { statusCode: 200, body: webhookChannelMap }).as('channelMap');
+  mount(
+    <TestFronteggWrapper
+      plugins={[ConnectivityPlugin({ api: { routes: servicesRoutes } })]}
+      context={{ urlPrefix: '' }}
+    >
+      <WebhookComponent rootPath={ROOT_PATH} />
+    </TestFronteggWrapper>
+  );
+  navigateTo(ROOT_PATH);
+  cy.wait(['@webhooks', '@categories', '@channelMap']);
+};
+
+describe('Connectivity Webhooks against overridden routes', () => {
+  it('reads the list, categories and channel map from the configured paths', () => {
+    mountAgainstServices();
+
+    cy.get('.fe-table__tbody .fe-table__tr').should('have.length', 2);
+    cy.contains('Order Sync').should('be.visible');
+  });
+
+  it('sends a status toggle to the configured update path', () => {
+    mountAgainstServices();
+    cy.intercept('PATCH', `${SERVICES}/webhook-1`, { statusCode: 200, body: {} }).as('patchWebhook');
+
+    cy.get(`${FIRST_ROW} input[type="checkbox"]`).click({ force: true });
+
+    cy.wait('@patchWebhook').its('request.body').should('include', { _id: 'webhook-1', isActive: false });
+  });
+
+  it('sends a delete to the configured delete path', () => {
+    mountAgainstServices();
+    cy.intercept('DELETE', `${SERVICES}/webhook-1`, { statusCode: 200, body: {} }).as('deleteWebhook');
+
+    openRemoveDialog();
+    cy.get('[data-test-id="acceptBtn"]').click();
+
+    cy.wait('@deleteWebhook');
   });
 });

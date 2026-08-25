@@ -20,6 +20,12 @@ export interface PluginConfig {
   preloadedState: any;
   Listener?: React.ComponentType<ListenerProps<any>>;
   WrapperComponent?: React.ComponentType<any>;
+  /**
+   * Builds the store in place of `createFronteggStore`, which hardwires every slice's
+   * reducer and saga and so ignores the `reducer`/`sagas` above. A plugin only needs this
+   * when it has to serve its own slice differently -- talking to a different backend, say.
+   */
+  createStore?: (rootInitialState: any) => EnhancedStore;
 }
 
 export interface FeProviderProps {
@@ -84,9 +90,12 @@ const FeState: FC<FeProviderProps> = (props) => {
     });
   ContextHolder.setOnRedirectTo(onRedirectTo);
 
+  const pluginStore = props.plugins?.find((p) => p.createStore)?.createStore;
+
   const store = useMemo(
     () =>
       props.store ??
+      pluginStore?.({ context }) ??
       createFronteggStore(
         { context },
         storeRef.current,

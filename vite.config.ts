@@ -41,6 +41,7 @@ export default defineConfig({
       'react-select',
       'react-table',
       'react-waypoint',
+      'redux-saga/effects',
       'tslib',
       'ua-parser-js',
       'uuid',

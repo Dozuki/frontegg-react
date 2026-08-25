@@ -16,6 +16,7 @@
     "@frontegg/react-core": "^4.0.23",
     "@reduxjs/toolkit": "^1.4.0",
     "classnames": "^2.2.6",
+    "redux-saga": "^1.1.0",
     "tslib": "^2.0.0"
   },
   "peerDependencies": {
